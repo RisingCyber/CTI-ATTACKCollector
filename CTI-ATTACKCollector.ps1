@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
     CTI-ATTACKCollector.ps1
-    Australian Phoenix CyberOps | Chadi Saliby
+    Australian Phoenix CyberOps
 
 .DESCRIPTION
     Downloads the MITRE ATT&CK Enterprise STIX bundle from GitHub,

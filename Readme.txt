@@ -3,15 +3,15 @@
 > **Hunt behaviour, not bytes.**  
 > A zero-dependency PowerShell tool that resolves every MITRE ATT&CK technique attributed to a named threat actor and emits a hunt-ready JSON report. One hypothesis statement per technique, ready for SIEM ingestion or TIP import.
 
-**Author:** Chadi Saliby | Director Consultant & Virtual CISO  
-**Organisation:** [Australian Phoenix CyberOps](https://australianphoenix.com.au)  
+**Author:** Chadi Saliby
+**Organisation:** [Australian Phoenix CyberOps]
 **Licence:** MIT
 
 ---
 
 ## Why This Exists
 
-Most CTI pipelines optimise for indicator volume IoCs. A SIEM fires an alert on a malicious IP, the analyst blocks it, the adversary rotates to a new one in les than 40 seconds.
+Most CTI pipelines optimise for indicator volume IoCs. A SIEM fires an alert on a malicious IP, the analyst blocks it, the adversary rotates to a new one in less than 40 seconds.
 
 Techniques the *how* of an intrusion are expensive to change. When your detections are built on TTPs rather than IoCs, you force the adversary to retrain, retool, and rethink following the Pyramid of pain. That is where the real defensive advantage compounds.
 
@@ -22,11 +22,11 @@ This script operationalises that principle. Give it an actor name. Get back ever
 ## Requirements
 
 | Requirement | Detail |
-|---|---|
+|
 | PowerShell | 5.1 or higher (Windows built-in) |
 | Network access | `raw.githubusercontent.com` (HTTPS/443) |
-| Execution policy | `RemoteSigned` or `Bypass` (see below) |
-| External tools | None - no API keys, no TAXII servers |
+| Execution policy | `RemoteSigned` or `Bypass` |
+| External tools | None - no API keys or no TAXII servers |
 
 **Set execution policy if needed:**
 ```powershell
@@ -50,10 +50,6 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 # Disable caching — always re-download the bundle
 .\CTI-ATTACKCollector.ps1 -ActorName 'APT41' -CachePath ''
-
-# Force fresh download even if cache exists
-Remove-Item "$env:TEMP\mitre_attack_enterprise.json" -ErrorAction SilentlyContinue
-.\CTI-ATTACKCollector.ps1 -ActorName 'MuddyWater'
 ```
 
 ---
@@ -64,7 +60,7 @@ Remove-Item "$env:TEMP\mitre_attack_enterprise.json" -ErrorAction SilentlyContin
 |---|---|---|---|
 | `-ActorName` | Yes | — | Full or partial ATT&CK group name. Case-insensitive. Matches on name and aliases. |
 | `-OutputPath` | No | `.\cti_report.json` | Path for the JSON report output. |
-| `-BundleUrl` | No | MITRE GitHub (Enterprise) | Override the STIX bundle URL — useful for pinning a specific ATT&CK version. |
+| `-BundleUrl` | No | MITRE GitHub (Enterprise) | Override the STIX bundle URL , useful for pinning a specific ATT&CK version. |
 | `-CachePath` | No | `$env:TEMP\mitre_attack_enterprise.json` | Local cache for the bundle. Reused for 24 hours. Set to `''` to disable. |
 
 **Actor name matching** is partial and alias-aware. `'APT29'`, `'Cozy Bear'`, and `'Midnight Blizzard'` all resolve to the same group. If your input matches multiple groups, the script picks the first and lists all matches so you can refine.
@@ -79,8 +75,8 @@ If the actor is not found, the script prints the first 30 available group names 
 
 ```
   ╔══════════════════════════════════════════════════╗
-  ║   CTI-ATTACKCollector  |  Australian Phoenix CyberOps               ║
-  ║   MITRE ATT&CK GitHub Bundle Edition                                ║
+  ║   CTI-ATTACKCollector  |   Phoenix CyberOps      ║
+  ║   MITRE ATT&CK GitHub Bundle Edition             ║
   ╚══════════════════════════════════════════════════╝
 
 [+] Using cached STIX bundle (14 min old)
@@ -178,16 +174,6 @@ TLS 1.2 is forced explicitly via `[Net.ServicePointManager]::SecurityProtocol` t
 **Feed into Phoenix CTI Forge:**  
 The JSON output schema is compatible with Phoenix CTI Forge's import format. Drop the file into the Forge's import panel for interactive hypothesis triage and detection rule generation.
 
-**Pipe into a detection engineering workflow:**
-```powershell
-$report = Get-Content .\apt29.json | ConvertFrom-Json
-
-# Get all techniques that have Process Creation as a data source
-$report.techniques |
-    Where-Object { $_.data_sources -like '*Process Creation*' } |
-    Select-Object technique_id, technique_name, hunt_hypothesis |
-    Format-Table -Wrap
-```
 
 **Pin to a specific ATT&CK version:**
 ```powershell
